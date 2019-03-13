@@ -1,0 +1,38 @@
+<!DOCTYPE>
+<html>
+
+<head>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+  <h5>你的余额：<span id='amount'>&&&amount&&&</span></h5>
+  <button id='button'>
+    付钱
+  </button>
+
+  <script src="./main.js"></script>
+  <script>
+    button.addEventListener('click', (e) => {
+      let _script = document.createElement('script')
+      let functionName = `celeste${parseInt(Math.random() * 100000000, 10)}`
+      window[functionName] = function (result) {
+        amount.innerText = amount.innerText - 0 - 1 // -0 变 Number
+        console.log(result)
+      }
+      _script.src = `http://jack.com:8002/pay?callback=${functionName}`
+      document.body.appendChild(_script)
+
+      _script.onload = function (e) { // 状态码 2xx 表示成功
+        e.currentTarget.remove() // 请求完，删除 _scipt 标签
+        delete window[functionName] // 请求完，删除 随机函数
+      }
+      _script.onerror = function (e) { // 状态码 4xx 表示失败
+        e.currentTarget.remove()
+        delete window[functionName]
+      }
+    })
+  </script>
+</body>
+
+</html>

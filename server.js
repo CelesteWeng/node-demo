@@ -3,43 +3,59 @@ var fs = require('fs')
 var url = require('url')
 var port = process.argv[2]
 
-if(!port){
+if (!port) {
     console.log('请指定端口号好不啦？\nnode server.js 8888 这样不会吗？')
     process.exit(1)
 }
 
-var server = http.createServer(function(request, response){
+var server = http.createServer(function (request, response) {
     var parsedUrl = url.parse(request.url, true)
-    var path = request.url
-    var query = ''
-    if(path.indexOf('?') >= 0){ query = path.substring(path.indexOf('?')) }
-    var pathNoQuery = parsedUrl.pathname
-    var queryObject = parsedUrl.query
+    var pathWithQuery = request.url
+    var queryString = ''
+    if (pathWithQuery.indexOf('?') >= 0) { queryString = pathWithQuery.substring(pathWithQuery.indexOf('?')) }
+    var path = parsedUrl.pathname
+    var query = parsedUrl.query
     var method = request.method
 
     /******** 从这里开始看，上面不要看 ************/
 
     console.log('HTTP 路径为\n' + path)
 
-    if(path == '/'){
+    if (path === '/') {
+        var string = fs.readFileSync('./index.html', 'utf8')
+        var amount = fs.readFileSync('./db', 'utf8')
+        string = string.replace('&&&amount&&&', amount)
+        response.statusCode = 200
         response.setHeader('Content-Type', 'text/html; charset=utf-8')
-        response.write(`<!DOCTYPE>\n<html>` +
-            `<head><link rel="stylesheet" href="/style.css"/>` +
-            `</head><body>` +
-            '<h1>好好学习，天天向上</h1>' +
-            `<script src="/main.js"></script>` +
-            `</body></html>`)
+        response.write(string)
         response.end()
-    }else if(path == '/style.css'){
+    } else if (path === '/style.css') {
+        var string = fs.readFileSync('./style.css', 'utf8')
+        response.statusCode = 200
         response.setHeader('Content-Type', 'text/css; charset=utf-8')
-        response.write('body{background-color: yellowgreen; h1{color: blue;}')
+        response.write(string)
         response.end()
-    }else if(path == '/main.js'){
+    } else if (path === '/main.js') {
+        var string = fs.readFileSync('./main.js', 'utf8')
+        response.statusCode = 200
         response.setHeader('Content-Type', 'text/javascript; charset=utf-8')
-        response.write("alert('恭喜你中了木马病毒一个')")
+        response.write(string)
         response.end()
-    }else {
+    } else if (path === '/pay') {
+        let amount = fs.readFileSync('./db', 'utf8')
+        amount -= 1
+        fs.writeFileSync('./db', amount)
+        let callbackName = query.callback
+        response.statusCode = 200
+        response.setHeader('Content-Type', 'application/javascript')
+        response.write(`
+            ${callbackName}.call(undefined, 'success')
+        `)
+        response.end()
+    } else {
         response.statusCode = 404
+        response.setHeader('Content-Type', 'text/html; charset=utf-8')
+        response.write('找不到对应的路径，你需要自行修改 server.js')
         response.end()
     }
 
